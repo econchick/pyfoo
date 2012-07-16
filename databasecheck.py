@@ -31,7 +31,6 @@ def form_check(form_list):
 
 	return missing_forms
 
-
 # inserts new form records
 # form_table is Python lable for 'forms' table in database
 def insert_missing_forms(missing_form):
@@ -60,21 +59,49 @@ def insert_missing_forms(missing_form):
 
 	update_table = conn.execute(form_table)
 
+# build question list from forms
+# returns a list of dictionaries { form hash, question }
+# LR Comment: There's got to be a better way to store/return a list of Qs
+def build_question_list(form_list):
+	question_list = []
+	for i in range(len(form_list)):
+		form_fields = form_list[i].fields
+		form_hash = str(form_list[i].Hash)
+		for field in form_fields:
+			question_list.append({'hash': form_hash, 
+				'questiontext': str(field.Title)})
+
+	return question_list
+
+# check to see if question is in questions table
+# returns a list of missing questions
+def question_check(question):
+	question_table = select([question])
+	results = conn.execute(question_table)
+
+	current_list = []
+	for result in results:
+		current_list.append(result.questiontext) # questiontext is column in DB
+
+	if question not in set(current_list):
+		return question
+	else:
+		return None
 
 # Update question list table
 # Implies question table is already created
-def update_question_list(question):
+def update_question_list(missing_question):
 	question_table = select([questions])
 
 	# auto increments primary key
-	question_table.insert().values(question_text=question) 
+	question_table.insert().values(question_text=missing_question) 
 
 	update_question_table = conn.execute(question_table)
 
 
 # Update answer table
 # Implies answer table is already created
-def SurveyAnswers(answer):
+def update_answer_list(answer):
 	answer_table = select([answers])
 
 	#auto increments primary key
